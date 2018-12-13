@@ -1,4 +1,4 @@
-package aws.lambda.custom.runtime.integration;
+package aws.lambda.custom.runtime.model;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 
@@ -20,4 +20,6 @@ public class LambdaInvocation extends NextInvocationResponse {
     public AwsLambdaContext getContext() {
         return context;
     }
+
+
 }

@@ -3,8 +3,10 @@ package greeting.example;
 import io.micronaut.test.annotation.MicronautTest;
 import org.junit.jupiter.api.Test;
 
+
 import javax.inject.Inject;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.Assert.assertEquals;
 
 @MicronautTest
 class GreetingControllerTest {

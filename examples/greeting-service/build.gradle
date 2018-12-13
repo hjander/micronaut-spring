@@ -1,3 +1,20 @@
+import com.amazonaws.services.lambda.model.InvocationType
+import jp.classmethod.aws.gradle.lambda.AWSLambdaInvokeTask
+import jp.classmethod.aws.gradle.lambda.AWSLambdaMigrateFunctionTask
+import com.amazonaws.services.lambda.model.Runtime
+
+buildscript {
+    repositories {
+        maven { url "https://plugins.gradle.org/m2/" }
+        mavenCentral()
+        mavenLocal()
+    }
+    dependencies {
+        classpath "jp.classmethod.aws:gradle-aws-plugin:0.37"
+    }
+}
+
+
 plugins {
     id "java"
     id "application"
@@ -6,6 +23,9 @@ plugins {
     id "io.spring.dependency-management" version "1.0.6.RELEASE"
     id "net.ltgt.apt" version "0.19"
 }
+
+apply plugin: 'jp.classmethod.aws.lambda'
+
 
 repositories {
     mavenCentral()
@@ -54,6 +74,27 @@ dependencies {
 //    runtime("org.springframework.boot:spring-boot-starter-tomcat")
 //    runtime 'javax.servlet:javax.servlet-api:4.0.0'
 
+    // for java 10
+    compile 'javax.annotation:javax.annotation-api:1.3.2'
+
+
+    compile "io.micronaut:micronaut-http-client:1.0.1"
+    compile "com.amazonaws:aws-lambda-java-core:1.2.0"
+    compile "com.amazonaws:aws-lambda-java-events:2.2.4"
+
+    compile "com.agorapulse:micronaut-http-server-basic:1.0.0"
+    compile "com.agorapulse:micronaut-function-aws-agp:1.0.0"
+
+
+
+    // due to graal bug, revisit after rc9
+    compile "com.jcraft:jzlib:1.1.3"
+
+
+
+    testCompile("io.rest-assured:rest-assured:3.1.1")
+    testCompile("com.github.tomakehurst:wiremock:2.19.0")
+
     testCompile("io.micronaut:micronaut-http-client")
     testCompile("io.micronaut.test:micronaut-test-junit5:1.0.0.RC2")
     testCompile "io.micronaut:micronaut-inject-java"
@@ -74,3 +115,36 @@ compileTestJava.options.compilerArgs += '-parameters'
 test {
     useJUnitPlatform()
 }
+
+
+//task awsLambdaRuntime(type: Zip) {
+//
+//    baseName = 'greeting'
+//    fileMode = 755
+//
+//    from('.') {
+//        include {
+//            'bootstrap'
+//            'greeting-service'
+//        }
+//    }
+//}
+//
+//task deploy(type: AWSLambdaMigrateFunctionTask, dependsOn: awsLambdaRuntime) {
+//    functionName = "hello-world"
+//    handler = "example.HelloWorldFunction::hello"
+//    role = "arn:aws:iam::${aws.accountId}:role/lambda_basic_execution"
+//    runtime = "provided"
+//    zipFile = shadowJar.archivePath
+//    memorySize = 256
+//    timeout = 60
+//}
+//
+//task invoke(type: AWSLambdaInvokeTask) {
+//    functionName = "hello-world"
+//    invocationType = InvocationType.RequestResponse
+//    payload = '{"name":"Fred"}'
+//    doLast {
+//        println "Lambda function result: " + new String(invokeResult.payload.array(), "UTF-8")
+//    }
+//}

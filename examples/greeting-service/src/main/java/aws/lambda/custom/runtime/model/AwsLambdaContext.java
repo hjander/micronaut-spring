@@ -1,4 +1,4 @@
-package aws.lambda.custom.runtime.integration;
+package aws.lambda.custom.runtime.model;
 
 import com.amazonaws.services.lambda.runtime.ClientContext;
 import com.amazonaws.services.lambda.runtime.CognitoIdentity;
@@ -13,11 +13,9 @@ import com.amazonaws.services.lambda.runtime.LambdaLogger;
 public class AwsLambdaContext implements Context {
 
 
-
-
     public AwsLambdaContext(String awsRequestId, String invokedFunctionArn, String logGroupName, String logStreamName,
                             String functionName, String functionVersion, CognitoIdentity identity, ClientContext clientContext,
-                            int memoryLimitInMB, int remainingTimeInMillis) {
+                            String memoryLimitInMB, int remainingTimeInMillis) {
 
         this.awsRequestId = awsRequestId;
         this.invokedFunctionArn = invokedFunctionArn;
@@ -27,36 +25,27 @@ public class AwsLambdaContext implements Context {
         this.functionVersion = functionVersion;
         this.identity = identity;
         this.clientContext = clientContext;
-        this.memoryLimitInMB = memoryLimitInMB;
+        this.memoryLimitInMB = Integer.parseInt(memoryLimitInMB);
         this.remainingTimeInMillis = remainingTimeInMillis;
     }
 
     private final String awsRequestId;
 
-
     private final String invokedFunctionArn;
 
-
     private final String logGroupName;
-   
     
     private final String logStreamName;
-    
-            
+
     private final String functionName;
-    
-    
+
     private final String functionVersion;
 
-    
     private final CognitoIdentity identity;
-
 
     private final ClientContext clientContext;
 
-
     private final int memoryLimitInMB;
-
 
     private final int remainingTimeInMillis;
 
@@ -94,10 +83,7 @@ public class AwsLambdaContext implements Context {
         return clientContext;
     }
 
-    public int getMemoryLimitInMB() {
-        return memoryLimitInMB;
-    }
-
+    public int getMemoryLimitInMB() { return memoryLimitInMB; }
 
     public int getRemainingTimeInMillis() {
         return remainingTimeInMillis;

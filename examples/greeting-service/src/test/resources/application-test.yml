@@ -1,0 +1,15 @@
+micronaut:
+  application:
+    name: greeting-service
+
+greeting:
+  template: "Hola, %s!"
+
+aws.lambda.runtime.api: http://localhost:8080
+aws.lambda.function.name: greeting
+aws.lambda.function.version: 1.0
+aws.lambda.function.memory.size: 512
+aws.lambda.log.group.name: testLogGroup
+aws.lambda.log.stream.name: testLogStream
+
+aws.handler: greeting.example.Greeting::greeting

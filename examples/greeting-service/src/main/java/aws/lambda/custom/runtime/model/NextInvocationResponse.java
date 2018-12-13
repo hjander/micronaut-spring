@@ -1,4 +1,4 @@
-package aws.lambda.custom.runtime.integration;
+package aws.lambda.custom.runtime.model;
 
 public class NextInvocationResponse {
 

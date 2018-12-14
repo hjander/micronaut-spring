@@ -1,7 +1,7 @@
 package aws.lambda.custom.runtime.micronaut;
 
-import aws.lambda.custom.runtime.AwsLambdaCustomRuntime;
 import aws.lambda.custom.runtime.AwsApiGatewayRoutingApplicationAdapter;
+import aws.lambda.custom.runtime.AwsLambdaCustomRuntime;
 import aws.lambda.custom.runtime.model.*;
 import com.amazonaws.services.lambda.runtime.ClientContext;
 import com.amazonaws.services.lambda.runtime.CognitoIdentity;
@@ -10,7 +10,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.context.env.Environment;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.runtime.Micronaut;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -40,6 +41,8 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
+    private static final Logger LOG = LoggerFactory.getLogger(MicronautAwsLambdaCustomRuntime.class);
+
 
     @Inject Environment env;
 
@@ -47,11 +50,6 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
     @Inject private AwsApiGatewayRoutingApplicationAdapter applicationAdapter;
 
     private LambdaRuntimeEnvironmentVariables lambdaEnvVariables;
-
-
-    public static void main(String[] args) {
-        Micronaut.run(MicronautAwsLambdaCustomRuntime.class);
-    }
 
 
     @Override
@@ -72,6 +70,8 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
      */
     @Override
     public void start() {
+
+       LOG.info("Starting AWS Custom runtime loop");
 
         initializeAwsLambdaRuntimeVariables();
 

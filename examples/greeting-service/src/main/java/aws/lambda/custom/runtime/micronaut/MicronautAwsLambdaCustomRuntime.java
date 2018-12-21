@@ -9,7 +9,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.context.env.Environment;
+import io.micronaut.context.event.StartupEvent;
 import io.micronaut.http.HttpResponse;
+import io.micronaut.runtime.event.annotation.EventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +45,7 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
 
     private static final Logger LOG = LoggerFactory.getLogger(MicronautAwsLambdaCustomRuntime.class);
 
+    private static final String ENABLE_RUNTIME = "enable.runtime"; // for disabling runtime loop while graal class analyzing
 
     @Inject Environment env;
 
@@ -52,16 +55,25 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
     private LambdaRuntimeEnvironmentVariables lambdaEnvVariables;
 
 
+    @EventListener
+    public void onStartup(StartupEvent startupEvent) {
+        System.out.println("Starting up Custom runtime");
+        this.start();
+    }
+
+
     @Override
     public void initializeAwsLambdaRuntimeVariables() {
 
-        this.lambdaEnvVariables = new LambdaRuntimeEnvironmentVariables(
+        this.lambdaEnvVariables = new LambdaRuntimeEnvironmentVariables( // TODO: move into class
                 null, //env.get(".handler", String.class).orElseThrow(IllegalArgumentException::new), TODO ?
                 env.get("aws.lambda.function.name", String.class).orElseThrow(IllegalArgumentException::new),
                 env.get("aws.lambda.log.group.name", String.class).orElseThrow(IllegalArgumentException::new),
                 env.get("aws.lambda.log.stream.name", String.class).orElseThrow(IllegalArgumentException::new),
                 env.get("aws.lambda.function.version", String.class).orElseThrow(IllegalArgumentException::new),
                 env.get("aws.lambda.function.memory.size", String.class).orElseThrow(IllegalArgumentException::new));
+
+        System.err.println("Starting Lambda Custom Runtime with environment:" + lambdaEnvVariables);
     }
 
 
@@ -71,22 +83,29 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
     @Override
     public void start() {
 
-       LOG.info("Starting AWS Custom runtime loop");
+        System.out.println("Starting runtime loop");
 
         initializeAwsLambdaRuntimeVariables();
 
 
         String handler;
         try {
+
             handler = getHandler();
+
         } catch (Exception e) {
-            handleRuntimeInitializeError(new InitialisationError(e));
+
+            handleRuntimeInitializeError(new LambdaError(e));
             System.exit(1);
             return;
         }
         try {
             //processEvents(handler);
-            processEvents();
+            if(env.get(ENABLE_RUNTIME, Boolean.class).orElse(true)) {
+                processEvents();
+            }else{
+                System.out.println("Runtime disabled");
+            }
 
         } catch (Exception e) {
             System.err.println(e);
@@ -96,6 +115,8 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
 
 
     void processEvents() {
+
+        System.err.println("Starting invocation cycle");
 
         while (true) {
             invocationCycle();
@@ -107,7 +128,7 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
         // TODO: read AWS headers only in start
         initializeAwsLambdaRuntimeVariables();
 
-
+        System.err.println("retrieve next invocation");
         LambdaInvocation nextInvocation = retrieveNextInvocation();
 
         try {
@@ -117,13 +138,22 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
 
             System.out.printf("Posting result to Lambda API Gateway");
 
-            handleInvocationResult(lambdaResult, nextInvocation.getContext());
+            if(hasError(lambdaResult)){
+                handleInvocationError(new LambdaError(lambdaResult.getStatusCode().toString(), null, null), nextInvocation.getContext());
+            }else{
+                handleInvocationResult(lambdaResult, nextInvocation.getContext());
+            }
+
         } catch (Exception e) {
 
             System.err.printf("Error invoking function: %n%s:", e);
 
-            handleInvocationError(new InvocationError(e), nextInvocation.getContext());
+            handleInvocationError(new LambdaError(e), nextInvocation.getContext());
         }
+    }
+
+    private boolean hasError(APIGatewayProxyResponseEvent lambdaResult) {
+        return lambdaResult.getStatusCode().intValue()>=400;
     }
 
     /**
@@ -217,20 +247,20 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
 
     /**
      * Handle errors while initializing the runtime
-     * @param err
+     * @param initError
      */
-    void handleRuntimeInitializeError(InitialisationError err) {
-        lambdaCustomRuntimeClient.postRuntimeInitError(err);
+    void handleRuntimeInitializeError(LambdaError initError) {
+        lambdaCustomRuntimeClient.postRuntimeInitError(initError);
     }
 
 
     /**
      * Communicate invocation errors
-     * @param error
+     * @param invocationError
      * @param context
      */
-    void handleInvocationError(InvocationError error, AwsLambdaContext context) {
-        HttpResponse<Void> res = lambdaCustomRuntimeClient.postFunctionInvocationError(error.getErrorType(), context.getAwsRequestId(), error);
+    void handleInvocationError(LambdaError invocationError, AwsLambdaContext context) {
+        HttpResponse<Void> res = lambdaCustomRuntimeClient.postFunctionInvocationError(invocationError.getErrorType(), context.getAwsRequestId(), invocationError);
         if (res.getStatus().getCode() != HTTP_ACCEPTED) {
             throw new Error("Unexpected response:" + res);
         }

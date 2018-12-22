@@ -2,7 +2,10 @@ package aws.lambda.custom.runtime.micronaut;
 
 import aws.lambda.custom.runtime.AwsApiGatewayRoutingApplicationAdapter;
 import aws.lambda.custom.runtime.AwsLambdaCustomRuntime;
-import aws.lambda.custom.runtime.model.*;
+import aws.lambda.custom.runtime.model.AwsLambdaContext;
+import aws.lambda.custom.runtime.model.LambdaError;
+import aws.lambda.custom.runtime.model.LambdaInvocation;
+import aws.lambda.custom.runtime.model.LambdaRuntimeEnvironmentVariables;
 import com.amazonaws.services.lambda.runtime.ClientContext;
 import com.amazonaws.services.lambda.runtime.CognitoIdentity;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -11,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.context.env.Environment;
 import io.micronaut.context.event.StartupEvent;
 import io.micronaut.http.HttpResponse;
-import io.micronaut.runtime.event.annotation.EventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +26,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.net.HttpURLConnection.HTTP_OK;
 
 /**
  * Implementation of the AWS Lambda Runtime Interface.
@@ -55,7 +58,7 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
     private LambdaRuntimeEnvironmentVariables lambdaEnvVariables;
 
 
-    @EventListener
+    //@EventListener
     public void onStartup(StartupEvent startupEvent) {
         System.out.println("Starting up Custom runtime");
         this.start();
@@ -73,7 +76,6 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
                 env.get("aws.lambda.function.version", String.class).orElseThrow(IllegalArgumentException::new),
                 env.get("aws.lambda.function.memory.size", String.class).orElseThrow(IllegalArgumentException::new));
 
-        System.err.println("Starting Lambda Custom Runtime with environment:" + lambdaEnvVariables);
     }
 
 
@@ -83,14 +85,11 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
     @Override
     public void start() {
 
-        System.out.println("Starting runtime loop");
-
-        initializeAwsLambdaRuntimeVariables();
-
+        System.out.println("Going to initialize runtime loop");
 
         String handler;
         try {
-
+            initializeAwsLambdaRuntimeVariables();
             handler = getHandler();
 
         } catch (Exception e) {
@@ -116,7 +115,7 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
 
     void processEvents() {
 
-        System.err.println("Starting invocation cycle");
+        System.out.println("Starting invocation cycle");
 
         while (true) {
             invocationCycle();
@@ -128,7 +127,7 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
         // TODO: read AWS headers only in start
         initializeAwsLambdaRuntimeVariables();
 
-        System.err.println("retrieve next invocation");
+        System.out.println("retrieve next invocation");
         LambdaInvocation nextInvocation = retrieveNextInvocation();
 
         try {
@@ -173,7 +172,7 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
 
         HttpResponse<String> lambdaRuntimeResponse = lambdaCustomRuntimeClient.getNextFunctionInvocation();
 
-        if (lambdaRuntimeResponse.getStatus().getCode() != 200) {
+        if (lambdaRuntimeResponse.getStatus().getCode() != HTTP_OK) {
             throw new Error("Unexpected invocation next response:" + lambdaRuntimeResponse);
         }
 
@@ -187,7 +186,7 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
         int remainingTimeInMillis = (int)Duration.between( Instant.now(), Instant.ofEpochMilli(deadlineMs)).toMillis();
 
 
-        // BASE64 encoded, later maybe deserialize
+        // TODO: BASE64 encoded, later maybe deserialize
         ClientContext clientContext = Optional.ofNullable(lambdaRuntimeResponse.getHeaders().get("lambda-runtime-client-context"))
                 .map(cc -> {
                     try {
@@ -267,19 +266,6 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
 
     }
 
-
-    /*
-    task deploy(type: AWSLambdaMigrateFunctionTask, dependsOn: shadowJar) {
-    functionName = "hello-world"
-    handler = "example.HelloWorldFunction::hello"
-    role = "arn:aws:iam::${aws.accountId}:role/lambda_basic_execution"
-    runtime = Runtime.Java8
-    zipFile = shadowJar.archivePath
-    memorySize = 256
-    timeout = 60
-}
-
-     */
 
     private String getHandler() {
 

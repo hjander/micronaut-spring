@@ -12,16 +12,25 @@ import javax.inject.Singleton;
 @Factory
 public class Bootstrap {
 
-
     public static void main(String[] args) {
+
+        System.out.println("Starting environment");
+
         ApplicationContext ctx = Micronaut.run(MicronautAwsLambdaCustomRuntime.class);
-        ctx.getBean(MicronautAwsLambdaCustomRuntime.class).start();
+        MicronautAwsLambdaCustomRuntime customRuntime = ctx.getBean(MicronautAwsLambdaCustomRuntime.class);
+
+        System.out.println("Got Custom Runtime. Starting up...");
+
+        customRuntime.start();
+
     }
 
 
     @Bean
     @Singleton
-    ApiGatewayProxyHandler apiGatewayProxyHandler() {
+    ApiGatewayProxyHandler apiGatewayProxyHandler(ApplicationContext context) {
+
+        // TODO: create with : new ApiGatewayProxyHandler(context);
         return new ApiGatewayProxyHandler();
     }
 }

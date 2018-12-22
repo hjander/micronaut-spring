@@ -32,7 +32,7 @@ targetCompatibility = 1.8
 mainClassName = "aws.lambda.custom.runtime.micronaut.Bootstrap"
 
 ext {
-    micronautVersion = "1.0.1"
+    micronautVersion = "1.0.2"
     micronautSpringVersion = "1.0.0.M1"
 }
 
@@ -64,7 +64,7 @@ dependencies {
     compile("io.micronaut:micronaut-http-server")
     compile("io.micronaut:micronaut-http-server-netty")
     runtime "ch.qos.logback:logback-classic:1.2.3"
-    runtime "io.micronaut:micronaut-graal:1.0.2"
+    runtime "io.micronaut:micronaut-graal"
 
     // uncomment the following to restore Spring Boot as the application executor
 //    runtime("org.springframework.boot:spring-boot-starter-tomcat")

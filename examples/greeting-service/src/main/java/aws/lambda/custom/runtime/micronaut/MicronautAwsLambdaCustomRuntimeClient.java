@@ -15,7 +15,7 @@ import io.micronaut.http.client.annotation.Client;
 import javax.validation.constraints.NotBlank;
 
 @Client(value = "${aws.lambda.runtime.api}", path = AwsLambdaCustomRuntimeClient.RUNTIME_PATH)
-public interface MicronautAwsLambdaCustomRuntimeClient extends AwsLambdaCustomRuntimeClient {
+public interface MicronautAwsLambdaCustomRuntimeClient {//extends AwsLambdaCustomRuntimeClient {
 
 
     // TODO : try Single as Response

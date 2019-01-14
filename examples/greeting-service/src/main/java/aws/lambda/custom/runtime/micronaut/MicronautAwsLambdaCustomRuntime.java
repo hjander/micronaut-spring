@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.context.env.Environment;
 import io.micronaut.context.event.StartupEvent;
 import io.micronaut.http.HttpResponse;
+import io.micronaut.runtime.event.annotation.EventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,22 +47,23 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
-    private static final Logger LOG = LoggerFactory.getLogger(MicronautAwsLambdaCustomRuntime.class);
+    //private static final Logger LOG = LoggerFactory.getLogger(MicronautAwsLambdaCustomRuntime.class);
 
     private static final String ENABLE_RUNTIME = "enable.runtime"; // for disabling runtime loop while graal class analyzing
 
     @Inject Environment env;
 
     @Inject private MicronautAwsLambdaCustomRuntimeClient lambdaCustomRuntimeClient;
-    @Inject private AwsApiGatewayRoutingApplicationAdapter applicationAdapter;
+    @Inject private MicronautHandlerRoutingApplicationAdapter applicationAdapter;
 
     private LambdaRuntimeEnvironmentVariables lambdaEnvVariables;
 
 
-    //@EventListener
+    @EventListener
     public void onStartup(StartupEvent startupEvent) {
-        System.out.println("Starting up Custom runtime");
-        this.start();
+        System.out.println("Starting up custom runtime");
+        start();
+        System.out.println("Finished executing custom runtime");
     }
 
 
@@ -118,6 +120,7 @@ public class MicronautAwsLambdaCustomRuntime implements AwsLambdaCustomRuntime {
         System.out.println("Starting invocation cycle");
 
         while (true) {
+            System.out.println("Next invocation cycle");
             invocationCycle();
         }
     }

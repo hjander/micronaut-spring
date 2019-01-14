@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-@Component
+//@Component
 public class GreetingJob {
 
     private final GreetingService greetingService;
@@ -14,7 +14,7 @@ public class GreetingJob {
         this.greetingService = greetingService;
     }
 
-    @Scheduled(fixedDelayString = "30s")
+    //@Scheduled(fixedDelayString = "30s")
     void printLastGreeting() {
         final Optional<Greeting> lastGreeting = greetingService.getLastGreeting();
         lastGreeting.ifPresent(greeting -> System.out.println("Last Greeting was = " + greeting.getContent()));

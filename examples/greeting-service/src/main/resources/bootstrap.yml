@@ -2,6 +2,20 @@ micronaut:
   application:
     name: greeting-service
 
+  heartbeat:
+    enabled: false
+
+  server:
+    maxRequestSize: 1MB
+    netty:
+      maxHeaderSize: 500KB
+      worker:
+        threads: 1
+
+  http:
+    client:
+      num-of-threads:1
+
 enable:
   runtime: false
 

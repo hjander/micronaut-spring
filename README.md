@@ -1,3 +1,3 @@
-# Micronaut for Spring
+# experimental prototype and work in progress
 
-Work in Progress...
+https://docs.aws.amazon.com/lambda/latest/dg/runtimes-custom.html
